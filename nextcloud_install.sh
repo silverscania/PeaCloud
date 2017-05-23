@@ -69,9 +69,9 @@ python setup.py install
 
 #Install PeaCloud
 cd $SCRIPT_DIR
-mkdir /var/peacloud
-echo "You must fill in the settings in /var/peacloud/settings.sh"
-cp settings.sh weekly-report.sh /var/peacloud
+mkdir /usr/peacloud
+echo "You must fill in the settings in /usr/peacloud/settings.sh"
+cp settings.sh weekly-report.sh /usr/peacloud
  
 #Setup cronjobs
 add_cronjob () {
@@ -80,9 +80,9 @@ add_cronjob () {
 }
 #Don't restart because you need to decrypt the disk
 #add_cronjob "#Reboot at 11pm every month\n0 23 1 * * reboot +10"
-add_cronjob "#Resume upload at 12am every night\n0 0 * * * /var/peacloud/weekly-report.sh --resume"
-add_cronjob "#Full upload at 12am every two weeks\n 0 0 1 /var/peacloud/weekly-report.sh --full"
-add_cronjob "#Full upload at 12am every two weeks\n 0 0 15 /var/peacloud/weekly-report.sh --full"
+add_cronjob "#Resume upload at 12am every night\n0 0 2-14,16-31 * * /var/peacloud/weekly-report.sh resume"
+add_cronjob "#Full upload at 12am every two weeks\n 0 0 1 * * /var/peacloud/weekly-report.sh force"
+add_cronjob "#Full upload at 12am every two weeks\n 0 0 15 * * /var/peacloud/weekly-report.sh force"
 
 
 #Not using aws sync because it doesn't encrypt filenames
