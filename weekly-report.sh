@@ -29,6 +29,8 @@ do_sync () {
 	# after 30 days. The files are prefixed so that an AWS lifecycle rule can be created
 	FOLDER=$1
 	BUCKET=$2
+	FULL=$3
+
 	ulimit -n 2048
 	TIMEOUT_RET_CODE=124 # Timeout function returns 124 in the event of a timeout
 
@@ -40,7 +42,7 @@ do_sync () {
 		--file-prefix-manifest manifest_ \
 		--file-prefix-archive archive_ \
 		--file-prefix-signature signature_ \
-		--volsize=100 \
+		--volsize=150 \
 		$FOLDER \
 		$BUCKET \
 		2>&1 | tee -a $TMP_FILE
@@ -56,6 +58,10 @@ do_sync () {
 	fi
 }
 
+do_db_dump () {
+	mysqldump --single-transaction -h localhost -u peecloud -ppassword nextcloud > /tmp/peacloud-sqlbkp.bak
+}
+
 #Check whether we are resuming, and there was a cancelled upload
 #or whether to upload regardless of pending upload
 check_sync_resume () {
@@ -68,6 +74,7 @@ check_sync_resume () {
 		fi
 
 	elif [ "$1" = "force" ];then
+		do_db_dump
 		do_duplicity_upload
 	else
 		echo "Didn't specify resume or force"
@@ -79,10 +86,11 @@ do_duplicity_upload () {
 	pkill -f "local/bin/duplicity"
 	#Remove single process lock file, duplicity still keeps a set of previous
 	#uploads and manifests in the same dir
+
 	rm -f /root/.cache/duplicity/*/lockfile.lock
 	
-	#do_sync /tmp/db-backup $AWS_DB_BUCKET	
-	do_sync . $AWS_DATA_BUCKET
+	do_sync /tmp/peacloud-sqlbkp.bak $AWS_DB_BUCKET
+	do_sync /storage $AWS_DATA_BUCKET
 }
 
 do_fsck /dev/mapper/ubuntu--peecloud--vg-storage
