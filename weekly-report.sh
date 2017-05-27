@@ -90,6 +90,7 @@ do_duplicity_upload () {
 	rm -f /root/.cache/duplicity/*/lockfile.lock
 	
 	do_sync /tmp/peacloud-sqlbkp.bak $AWS_DB_BUCKET
+	do_sync /var/www/peecloud/config $AWS_CONFIG_BUCKET
 	do_sync /storage $AWS_DATA_BUCKET
 }
 
