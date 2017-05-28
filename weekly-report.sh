@@ -2,6 +2,9 @@
 
 set -x
 
+#Cron needs path setting
+export PATH=$PATH:/sbin/:/usr/bin/:/bin:/usr/local/bin/
+
 #Set
 source /usr/peacloud/settings.sh
 
@@ -50,11 +53,11 @@ do_sync () {
 	SYNC_RESULT=${PIPESTATUS[0]}
 
 	if [ $SYNC_RESULT = $TIMEOUT_RET_CODE ]; then
-		BODY="$BODY[ PASS ] duplicity upload timed out uploading to $BUCKET"
+		BODY="$BODY[ PASS ] duplicity upload timed out uploading to $BUCKET\n"
 	elif [ $SYNC_RESULT = 0 ]; then
-		BODY="$BODY[ PASS ] duplicity upload succeeded uploading to $BUCKET"
+		BODY="$BODY[ PASS ] duplicity upload succeeded uploading to $BUCKET\n"
 	else
-		BODY="$BODY[ FAIL ] duplicity upload failed uploading to $BUCKET"
+		BODY="$BODY[ FAIL ] duplicity upload failed uploading to $BUCKET\n"
 	fi
 }
 
