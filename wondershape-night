@@ -1,0 +1,4 @@
+#!/bin/bash
+
+wondershaper clear enp8s0
+
