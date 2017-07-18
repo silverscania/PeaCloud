@@ -12,7 +12,7 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 apt-get install apache2 mariadb-server libapache2-mod-php7.0
 apt-get install php7.0-gd php7.0-json php7.0-mysql php7.0-curl php7.0-mbstring
 apt-get install php7.0-intl php7.0-mcrypt php-imagick php7.0-xml php7.0-zip
-apt-get install git python-pip mailutils
+apt-get install git python-pip mailutils wondershaper
 
 #Additional Apache config
 a2enmod rewrite
@@ -80,15 +80,14 @@ add_cronjob () {
 }
 #Don't restart because you need to decrypt the disk
 #add_cronjob "#Reboot at 11pm every month\n0 23 1 * * reboot +10"
-add_cronjob "#Resume upload at 12am every night\n0 0 2-14,16-31 * * /usr/peacloud/run-and-log.sh /usr/peacloud/weekly-report.sh resume"
-add_cronjob "#Full upload at 12am every two weeks\n 0 0 1 * * /usr/peacloud/run-and-log.sh /usr/peacloud/weekly-report.sh force"
-add_cronjob "#Full upload at 12am every two weeks\n 0 0 15 * * /usr/peacloud/run-and-log.sh /usr/peacloud/weekly-report.sh force"
 
+#You can have it upload at night and set the timeout to 8h, or use wondershape method below to upload continually
+#add_cronjob "#Resume upload at 12am every night\n0 0 2-14,16-31 * * /usr/peacloud/run-and-log.sh /usr/peacloud/weekly-report.sh resume"
+#add_cronjob "#Full upload at 12am every two weeks\n 0 0 1 * * /usr/peacloud/run-and-log.sh /usr/peacloud/weekly-report.sh force"
+#add_cronjob "#Full upload at 12am every two weeks\n 0 0 15 * * /usr/peacloud/run-and-log.sh /usr/peacloud/weekly-report.sh force"
 
-#Not using aws sync because it doesn't encrypt filenames
-##setup aws cli
-#pip install awscli
-#aws configure 
-## manually enter keys from console
-## region: ap-southeast-1
+add_cronjob "0 0 * * * /usr/peacloud/wondershape-night"
+add_cronjob "45 7 * * * /usr/peacloud/wondershape-day"
+
+add_cronjob "@reboot /usr/peacloud/wondershape-day && /usr/peacloud/run-and-log.sh /usr/peacloud/weekly-report.sh force"
 

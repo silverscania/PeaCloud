@@ -1,4 +1,4 @@
 #!/bin/bash
 
-wondershaper enp8s0 4000 1000
+wondershaper enp8s0 2000 550
 

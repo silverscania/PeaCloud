@@ -8,9 +8,6 @@ export PATH=$PATH:/sbin/:/usr/bin/:/bin:/usr/local/bin/
 #Set
 source /usr/peacloud/settings.sh
 
-#rm -f /tmp/peecloud-sync-result*
-TMP_FILE=$(mktemp /usr/peacloud/results/sync-XXXXX.txt)
-
 BODY="Bi-weekly status report:\n----------------------------\n\n"
 
 do_fsck () {
@@ -45,10 +42,12 @@ do_sync () {
 		--file-prefix-manifest manifest_ \
 		--file-prefix-archive archive_ \
 		--file-prefix-signature signature_ \
-		--volsize=150 \
+		--volsize=1000 \
+		--progress \
+		--progress-rate 60 \
 		$FOLDER \
 		$BUCKET \
-		2>&1 | tee -a $TMP_FILE
+		2>&1
 
 	SYNC_RESULT=${PIPESTATUS[0]}
 
@@ -59,30 +58,31 @@ do_sync () {
 	else
 		BODY="$BODY[ FAIL ] duplicity upload failed uploading to $BUCKET\n"
 	fi
+
+	echo "Bucket $BUCKET content after sync is"
+	aws s3 ls --summarize --human-readable --recursive --region ap-south-1 ${BUCKET##*/} | tail -n 2
+ 
 }
 
 do_db_dump () {
 	mysqldump --single-transaction -h localhost -u peecloud -ppassword nextcloud > /tmp/peacloud-sqlbkp.bak
 }
 
-#Check whether we are resuming, and there was a cancelled upload
-#or whether to upload regardless of pending upload
-check_sync_resume () {
-	if [ "$1" = "resume" ];then
-		if compgen -G "/root/.cache/duplicity/*/lockfile.lock" > /dev/null; then
-			printf "\nFound a lockfile, continuing with the upload\n" >> $TMP_FILE
-			do_duplicity_upload
-		else
-			printf "\nNo lockfile, not bothering with the upload continue\n" >> $TMP_FILE
-		fi
+resume_upload () {
+	do_fsck /dev/mapper/ubuntu--peecloud--vg-storage
+	do_fsck /dev/mapper/ubuntu--peecloud--vg-root
+	df -Pkh
 
-	elif [ "$1" = "force" ];then
-		do_db_dump
-		do_duplicity_upload
-	else
-		echo "Didn't specify resume or force"
-		exit 1
-	fi	
+	do_db_dump
+	do_duplicity_upload
+
+	#DF="$(df -Pkh)"
+	#BODY="${BODY}\n\n\nDisk usage:\n---------------------\n${DF}"
+	#echo -e "$BODY" | mail -r "peecloud@peecloud.lan (Trump, Grand King Emporer of PeeCloud and the Holy Lands)" -s "Receieved intergalactic bi-weekly status report from deepspace network..." $EMAIL_RECIPIENTS
+
+	echo "Finished upload, starting sleep: $(date)"
+	sleep 5d
+	echo "Finished sleep: $(date)"
 }
 
 do_duplicity_upload () {
@@ -94,15 +94,8 @@ do_duplicity_upload () {
 	
 	do_sync /tmp/peacloud-sqlbkp.bak $AWS_DB_BUCKET
 	do_sync /var/www/peecloud/config $AWS_CONFIG_BUCKET
-	do_sync /storage $AWS_DATA_BUCKET
+	do_sync /storage $AWS_DATA_BUCKET 
 }
 
-do_fsck /dev/mapper/ubuntu--peecloud--vg-storage
-do_fsck /dev/mapper/ubuntu--peecloud--vg-root
+resume_upload
 
-check_sync_resume $1
-
-DF="$(df -Pkh)"
-BODY="${BODY}\n\n\nDisk usage:\n---------------------\n${DF}"
-BODY="${BODY}\n\n\nResults: $TMP_FILE at $(date)"
-echo -e "$BODY" | mail -r "peecloud@peecloud.lan (Trump, Grand King Emporer of PeeCloud and the Holy Lands)" -s "Receieved intergalactic bi-weekly status report from deepspace network..." $EMAIL_RECIPIENTS
