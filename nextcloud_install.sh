@@ -60,12 +60,13 @@ service systemd-logind restart
 
 #Setup duplicity
 cd $SCRIPT_DIR
-tar -xvf duplicity-0.7.12.tar.gz
-cd duplicity-0.7.12/
-apt-get install rsync librsync-dev python-urllib3 
-pip install lockfile
-pip install boto
-python setup.py install
+#tar -xvf duplicity-0.7.12.tar.gz
+#cd duplicity-0.7.12/
+#apt-get install rsync librsync-dev python-urllib3 
+#pip install lockfile
+#pip install boto
+#python setup.py install
+sudo apt-get install duplicity
 
 #Install PeaCloud
 cd $SCRIPT_DIR
