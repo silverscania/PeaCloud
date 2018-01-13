@@ -26,4 +26,10 @@ services:
       - nextcloud:/var/www/html
       - /mnt/nextcloud_encrypted:/storage
     restart: always
-
+  
+  peacloud_aws_backup:
+    build: ./peacloud_aws_backup
+    image: peacloud_aws_backup
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always

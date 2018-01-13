@@ -6,7 +6,7 @@ set -x
 export PATH=$PATH:/sbin/:/usr/bin/:/bin:/usr/local/bin/
 
 # Source config variables
-source /usr/peacloud/settings.sh
+source ./settings.sh
 
 # Set the names of the containers that the docker volumes are extracted from
 DB_CONTAINER_NAME=docker_db_1
@@ -36,10 +36,8 @@ do_sync () {
 	FULL=$3
 
 	ulimit -n 2048
-	TIMEOUT_RET_CODE=124 # Timeout function returns 124 in the event of a timeout
-
-	#Timout default signal is fine, seems to be able to resume after sigterm
-	timeout $UPLOAD_TIMEOUT duplicity --s3-use-new-style \
+	
+	duplicity --s3-use-new-style \
 		--verbosity i --s3-use-ia \
 		--s3-use-multiprocessing \
 		--s3-use-server-side-encryption \
@@ -53,18 +51,16 @@ do_sync () {
 		$BUCKET \
 		2>&1
 
-	SYNC_RESULT=${PIPESTATUS[0]}
+	SYNC_RESULT=$?
 
-	if [ $SYNC_RESULT = $TIMEOUT_RET_CODE ]; then
-		BODY="$BODY[ PASS ] duplicity upload timed out uploading to $BUCKET\n"
-	elif [ $SYNC_RESULT = 0 ]; then
+	if [ $SYNC_RESULT = 0 ]; then
 		BODY="$BODY[ PASS ] duplicity upload succeeded uploading to $BUCKET\n"
 	else
 		BODY="$BODY[ FAIL ] duplicity upload failed uploading to $BUCKET\n"
 	fi
 
 	echo "Bucket $BUCKET content after sync is"
-	aws s3 ls --summarize --human-readable --recursive --region ap-south-1 ${BUCKET##*/} | tail -n 2
+	#aws s3 ls --summarize --human-readable --recursive --region ap-south-1 ${BUCKET##*/} | tail -n 2
  
 }
 
@@ -148,12 +144,13 @@ do_duplicity_upload () {
 
 	rm -f /root/.cache/duplicity/*/lockfile.lock
 	
-	do_sync /tmp/peacloud-sqlbkp.bak $AWS_DB_BUCKET
-	do_sync /var/www/peecloud/config $AWS_CONFIG_BUCKET
-	do_sync /storage $AWS_DATA_BUCKET 
+	do_sync ${DUMP_DEST_FOLDER}/mysql $AWS_DB_BUCKET
+	#do_sync ${DUMP_DEST_FOLDER}/html $AWS_CONFIG_BUCKET
+	#do_sync /mnt/nextcloud_encrypted/ $AWS_DATA_BUCKET 
 }
 
 # Call the function that does everything
 #main
 
 export_docker_volumes
+do_duplicity_upload
