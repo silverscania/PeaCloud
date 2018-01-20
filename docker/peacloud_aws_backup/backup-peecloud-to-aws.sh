@@ -8,9 +8,9 @@ export PATH=$PATH:/sbin/:/usr/bin/:/bin:/usr/local/bin/
 # Source config variables
 source ./settings.sh
 
-# Set the names of the containers that the docker volumes are extracted from
-DB_CONTAINER_NAME=docker_db_1
-APP_CONTAINER_NAME=docker_app_1
+# Set the names of the volumes that persist everything in peacloud
+DB_CONTAINER_VOLUME=docker_db
+APP_CONTAINER_VOLUME=docker_app
 
 BODY="Bi-weekly status report:\n----------------------------\n\n"
 
@@ -82,28 +82,6 @@ do_sync () {
 # $ docker run -v /dbdata --name dbstore2 ubuntu /bin/bash
 #
 # Then un-tar the backup file in the new container`s data volume.
-# 
-# $ docker run --rm --volumes-from dbstore2 -v $(pwd):/backup ubuntu bash -c "cd /dbdata && tar xvf /backup/backup.tar --strip 1"
-# 
-# You can use the techniques aboveh to automate backup, migration and restore testing using your preferred tools.
-export_docker_volumes () {
-	# Remove folder so files that are deleted don't get backed up
-	DUMP_DEST_FOLDER=/tmp/backupdump
-	rm -rf $DUMP_DEST_FOLDER
-
-	# dump /var/lib/mysql from docker_db_1 container to /tmp/backupdump/mysql folder
-	# to find where the volume is mounted do, look in the docker-compose yaml file
-	# in the db container the docker volume is mounted to /var/lib/mysql so thats all we 
-	# need to backup
-	# --rm means that this container is deleted after running
-	docker run --rm --volumes-from ${DB_CONTAINER_NAME} -v ${DUMP_DEST_FOLDER}:/backup ubuntu \
-	cp -r /var/lib/mysql /backup/
-
-
-	docker run --rm --volumes-from ${APP_CONTAINER_NAME} -v ${DUMP_DEST_FOLDER}:/backup ubuntu \
-        cp -r /var/www/html /backup/
-
-}
 
 # Main function does the following things:
 # 
@@ -145,7 +123,7 @@ do_duplicity_upload () {
 	rm -f /root/.cache/duplicity/*/lockfile.lock
 	
 	do_sync ${DUMP_DEST_FOLDER}/mysql $AWS_DB_BUCKET
-	#do_sync ${DUMP_DEST_FOLDER}/html $AWS_CONFIG_BUCKET
+	do_sync ${DUMP_DEST_FOLDER}/html $AWS_WWW_DATA_FOLDER_BUCKET
 	#do_sync /mnt/nextcloud_encrypted/ $AWS_DATA_BUCKET 
 }
 
@@ -153,4 +131,4 @@ do_duplicity_upload () {
 #main
 
 export_docker_volumes
-do_duplicity_upload
+#do_duplicity_upload

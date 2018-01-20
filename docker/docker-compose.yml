@@ -31,5 +31,12 @@ services:
     build: ./peacloud_aws_backup
     image: peacloud_aws_backup
     volumes:
+      # Mount the host docker stuff so the backup container
+      # can start and stop the db and app containers.
       - /var/run/docker.sock:/var/run/docker.sock
-    restart: always
+
+      # Mount other volumes readonly
+      - db:/mnt/db_volume:ro
+      - nextcloud:/mnt/app_volume:ro
+
+    restart: "no"

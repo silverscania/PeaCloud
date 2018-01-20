@@ -1,12 +1,15 @@
-FROM alpine
-
-# RUN apt-get update \
-#    && apt-get install -y --no-install-recommends \
-#    git ca-certificates build-essential \
-#    cmake libssl-dev wget sudo
+FROM ubuntu
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+    duplicity
+
+#    git ca-certificates build-essential \
+#    cmake libssl-dev wget sudo
+
+#RUN apt-get update \
+#    && apt-get install -y --no-install-recommends
+
 #    git ca-certificates build-essential \
 #    cmake libssl-dev wget sudo
 
@@ -26,11 +29,7 @@ RUN apt-get update \
 #RUN cmake CMakeLists.txt -DNO_GPU=ON -DCMAKE_BUILD_TYPE=RELEASE \
 #    && make -j 4
 
-#COPY --chown=burstminer mining.conf /creepMiner
+COPY ../backup-peecloud-to-aws.sh .
  
-# Only works when run from the bin dir
-#WORKDIR bin
-#ENTRYPOINT ["./creepMiner"]
 ENTRYPOINT ["sleep"]
-#CMD ["-c", "../mining.conf"]
 CMD ["60"]
