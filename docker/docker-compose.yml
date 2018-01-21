@@ -4,6 +4,12 @@ volumes:
   nextcloud:
   db:
 
+  # Duplicity has a cache so it doesn't have to pull signatures down
+  # from the remote everytime an incremental backup is done. This 
+  # doesn't need to be backed up.
+  duplicity_cache:
+  duplicity_cache_gpg:
+
 services:
   db:
     image: mariadb
@@ -34,6 +40,8 @@ services:
       # Mount the host docker stuff so the backup container
       # can start and stop the db and app containers.
       - /var/run/docker.sock:/var/run/docker.sock
+      - duplicity_cache:/root/.cache/duplicity/
+      - duplicity_cache_gpg:/root/.gnupg/
 
       # Mount other volumes readonly
       - db:/mnt/db_volume:ro

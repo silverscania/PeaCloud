@@ -1,35 +1,37 @@
-FROM ubuntu
+FROM alpine:3.7
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    duplicity
+RUN set -x \
+ && apk add --no-cache \
+        ca-certificates \
+        duplicity \
+        lftp \
+        openssh \
+        openssl \
+        py-crypto \
+        py-pip \
+        py-paramiko \
+        py-setuptools \
+        rsync \
+        bash \
+ && update-ca-certificates \
+ && pip install \
+      pydrive==1.3.1 \
+      fasteners==0.14.1 \
+      boto3==1.5.8 \
+ && apk del --purge py-pip
 
-#    git ca-certificates build-essential \
-#    cmake libssl-dev wget sudo
+VOLUME ["/root/.cache/duplicity", "/root/.gnupg"]
 
-#RUN apt-get update \
-#    && apt-get install -y --no-install-recommends
+#FROM ubuntu
 
-#    git ca-certificates build-essential \
-#    cmake libssl-dev wget sudo
+#RUN apt-get update
+#RUN apt-get install -y \
+#    duplicity \
+#    python-boto
 
+# See inside settings.sh for instructions on what to put in 
+# mysettings.sh
+COPY ./settings.sh ./mysettings.sh ./backup-peecloud-to-aws.sh /
 
-#RUN useradd -m burstminer && \
-#    echo "burstminer:burstminer" | chpasswd
-
-#RUN git clone https://github.com/Creepsky/creepMiner.git
-
-# install-poco needs root
-#RUN cd creepMiner && sh ./install-poco.sh
-
-#RUN chown -R burstminer /creepMiner
-#USER burstminer
-
-#WORKDIR /creepMiner
-#RUN cmake CMakeLists.txt -DNO_GPU=ON -DCMAKE_BUILD_TYPE=RELEASE \
-#    && make -j 4
-
-COPY ../backup-peecloud-to-aws.sh .
- 
-ENTRYPOINT ["sleep"]
+ENTRYPOINT ["/backup-peecloud-to-aws.sh"]
 CMD ["60"]

@@ -9,8 +9,8 @@ export PATH=$PATH:/sbin/:/usr/bin/:/bin:/usr/local/bin/
 source ./settings.sh
 
 # Set the names of the volumes that persist everything in peacloud
-DB_CONTAINER_VOLUME=docker_db
-APP_CONTAINER_VOLUME=docker_app
+DB_CONTAINER_VOLUME=/mnt/db_volume
+APP_CONTAINER_VOLUME=/mnt/app_volume
 
 BODY="Bi-weekly status report:\n----------------------------\n\n"
 
@@ -47,6 +47,7 @@ do_sync () {
 		--volsize=1000 \
 		--progress \
 		--progress-rate 60 \
+		--dry-run \
 		$FOLDER \
 		$BUCKET \
 		2>&1
@@ -63,25 +64,6 @@ do_sync () {
 	#aws s3 ls --summarize --human-readable --recursive --region ap-south-1 ${BUCKET##*/} | tail -n 2
  
 }
-
-# Export docker volume
-# This is the excerpt from the docker docs:
-# 
-# Backup, restore, or migrate data volumes
-#
-# Another useful function we can perform with volumes is use them for backups, restores or 
-# migrations. You do this by using the --volumes-from flag to create a new container that 
-# mounts that volume, like so:
-# $ docker run --rm --volumes-from dbstore -v $(pwd):/backup ubuntu tar cvf /backup/backup.tar /dbdata
-# Here you’ve launched a new container and mounted the volume from the dbstore container. 
-# You’ve then mounted a local host directory as /backup. Finally, you’ve passed a command 
-# that uses tar to backup the contents of the dbdata volume to a backup.tar file inside our 
-# /backup directory. When the command completes and the container stops we’ll be left with 
-# a backup of our dbdata volume.
-# You could then restore it to the same container, or another that you’ve made elsewhere. Create a new container.
-# $ docker run -v /dbdata --name dbstore2 ubuntu /bin/bash
-#
-# Then un-tar the backup file in the new container`s data volume.
 
 # Main function does the following things:
 # 
@@ -122,13 +104,12 @@ do_duplicity_upload () {
 
 	rm -f /root/.cache/duplicity/*/lockfile.lock
 	
-	do_sync ${DUMP_DEST_FOLDER}/mysql $AWS_DB_BUCKET
-	do_sync ${DUMP_DEST_FOLDER}/html $AWS_WWW_DATA_FOLDER_BUCKET
+	#do_sync ${DB_CONTAINER_VOLUME} $AWS_DB_BUCKET
+	do_sync ${APP_CONTAINER_VOLUME} $AWS_WWW_DATA_FOLDER_BUCKET
 	#do_sync /mnt/nextcloud_encrypted/ $AWS_DATA_BUCKET 
 }
 
 # Call the function that does everything
 #main
 
-export_docker_volumes
-#do_duplicity_upload
+do_duplicity_upload
