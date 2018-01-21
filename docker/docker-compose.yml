@@ -36,6 +36,7 @@ services:
   peacloud_aws_backup:
     build: ./peacloud_aws_backup
     image: peacloud_aws_backup
+    hostname: chunkies
     volumes:
       # Mount the host docker stuff so the backup container
       # can start and stop the db and app containers.

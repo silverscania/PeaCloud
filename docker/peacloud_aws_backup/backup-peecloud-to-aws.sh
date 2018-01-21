@@ -47,7 +47,6 @@ do_sync () {
 		--volsize=1000 \
 		--progress \
 		--progress-rate 60 \
-		--dry-run \
 		$FOLDER \
 		$BUCKET \
 		2>&1
@@ -98,13 +97,12 @@ main () {
 }
 
 do_duplicity_upload () {
-	pkill -f "local/bin/duplicity"
 	#Remove single process lock file, duplicity still keeps a set of previous
 	#uploads and manifests in the same dir
 
-	rm -f /root/.cache/duplicity/*/lockfile.lock
+	#rm -f /root/.cache/duplicity/*/lockfile.lock
 	
-	#do_sync ${DB_CONTAINER_VOLUME} $AWS_DB_BUCKET
+	do_sync ${DB_CONTAINER_VOLUME} $AWS_DB_BUCKET
 	do_sync ${APP_CONTAINER_VOLUME} $AWS_WWW_DATA_FOLDER_BUCKET
 	#do_sync /mnt/nextcloud_encrypted/ $AWS_DATA_BUCKET 
 }
