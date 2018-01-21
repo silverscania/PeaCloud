@@ -34,6 +34,7 @@ do_sync () {
 	FOLDER=$1
 	BUCKET=$2
 
+        
 	ulimit -n 2048
 	
 	duplicity --s3-use-new-style \
@@ -61,31 +62,6 @@ do_sync () {
 	echo "Bucket $BUCKET content after sync is"
 	#aws s3 ls --summarize --human-readable --recursive --region ap-south-1 ${BUCKET##*/} | tail -n 2
  
-}
-
-do_restore () {
-       
-	BUCKET=$1
-	FOLDER=$2
-
-        ulimit -n 2048
-
-	echo "restore"
-	exit 0
-        duplicity restore --s3-use-new-style \
-                --verbosity i --s3-use-ia \
-                --s3-use-multiprocessing \
-                --s3-use-server-side-encryption \
-                --file-prefix-manifest manifest_ \
-                --file-prefix-archive archive_ \
-                --file-prefix-signature signature_ \
-                --progress \
-                --progress-rate 60 \
-                $BUCKET \
-                $FOLDER \
-                2>&1
-
-        SYNC_RESULT=$?
 }
 
 # Main function does the following things:
@@ -145,12 +121,12 @@ restore_all () {
    		exit 1
 	fi
 
-	rm -rf ${DB_CONTAINER_VOLUME}/*
-#	rm -rf ${DB_CONTAINER_VOLUME}/*
+	#rm -rf ${DB_CONTAINER_VOLUME}/*
+	#rm -rf ${APP_CONTAINER_VOLUME}/*
 #	rm -rf ${DB_CONTAINER_VOLUME}/*
 
-	#do_restore $AWS_DB_BUCKET
 	do_sync ${AWS_DB_BUCKET} ${DB_CONTAINER_VOLUME} 
+	do_sync ${AWS_WWW_DATA_FOLDER_BUCKET} ${APP_CONTAINER_VOLUME} 
 }
 
 do_duplicity_upload () {
@@ -159,8 +135,8 @@ do_duplicity_upload () {
 
 	#rm -f /root/.cache/duplicity/*/lockfile.lock
 	
-	do_sync ${DB_CONTAINER_VOLUME} $AWS_DB_BUCKET
-	do_sync ${APP_CONTAINER_VOLUME} $AWS_WWW_DATA_FOLDER_BUCKET
+	do_sync ${DB_CONTAINER_VOLUME} ${AWS_DB_BUCKET}
+	do_sync ${APP_CONTAINER_VOLUME} ${AWS_WWW_DATA_FOLDER_BUCKET}
 	#do_sync /mnt/nextcloud_encrypted/ $AWS_DATA_BUCKET 
 }
 

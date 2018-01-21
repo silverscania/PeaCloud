@@ -13,7 +13,7 @@ volumes:
 services:
   db:
     image: mariadb
-    restart: always
+    restart: unless-stopped
     volumes:
       - db:/var/lib/mysql
     environment:
@@ -31,7 +31,7 @@ services:
     volumes:
       - nextcloud:/var/www/html
       - /mnt/nextcloud_encrypted:/storage
-    restart: always
+    restart: unless-stopped
   
   peacloud_aws_backup:
     build: ./peacloud_aws_backup
@@ -45,7 +45,8 @@ services:
       - duplicity_cache_gpg:/root/.gnupg/
 
       # Mount other volumes readonly
-      - db:/mnt/db_volume:ro
-      - nextcloud:/mnt/app_volume:ro
+      - db:/mnt/db_volume
+      - nextcloud:/mnt/app_volume
+      - /mnt/nextcloud_encrypted:/mnt/nextcloud_encrypted:ro
 
-    restart: "no"
+    restart: unless-stopped
