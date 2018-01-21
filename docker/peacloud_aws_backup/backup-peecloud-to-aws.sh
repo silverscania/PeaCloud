@@ -33,7 +33,6 @@ do_sync () {
 	# after 30 days. The files are prefixed so that an AWS lifecycle rule can be created
 	FOLDER=$1
 	BUCKET=$2
-	FULL=$3
 
 	ulimit -n 2048
 	
@@ -64,6 +63,31 @@ do_sync () {
  
 }
 
+do_restore () {
+       
+	BUCKET=$1
+	FOLDER=$2
+
+        ulimit -n 2048
+
+	echo "restore"
+	exit 0
+        duplicity restore --s3-use-new-style \
+                --verbosity i --s3-use-ia \
+                --s3-use-multiprocessing \
+                --s3-use-server-side-encryption \
+                --file-prefix-manifest manifest_ \
+                --file-prefix-archive archive_ \
+                --file-prefix-signature signature_ \
+                --progress \
+                --progress-rate 60 \
+                $BUCKET \
+                $FOLDER \
+                2>&1
+
+        SYNC_RESULT=$?
+}
+
 # Main function does the following things:
 # 
 # * Check health of disks
@@ -80,20 +104,53 @@ do_sync () {
 # TODO: find a better way of reporting because email from a home IP is impossible. (Gets blocked by Google etc.)
 #
 main () {
-	do_fsck /dev/mapper/ubuntu--peecloud--vg-storage
-	do_fsck /dev/mapper/ubuntu--peecloud--vg-root
-	df -Pkh
+	#do_fsck /dev/mapper/ubuntu--peecloud--vg-storage
+	#do_fsck /dev/mapper/ubuntu--peecloud--vg-root
+	#df -Pkh
+	
+	case "$1" in
+  		"--immediate-backup")
+    		do_duplicity_upload
+    		;;
 
-	do_db_dump
-	do_duplicity_upload
+		"--restore")
+		restore_all
+    		;;
+
+		"--weekly-backup")
+		while [ 1 ]
+		do
+			echo "Starting sleep: $(date)"
+			sleep 7d
+			echo "Finished sleep: $(date)"
+			do_duplicity_upload
+		done
+    		;;
+
+		*)
+    		echo "You have failed to specify what to do correctly."
+    		exit 1
+    		;;
+	esac
 
 	#DF="$(df -Pkh)"
 	#BODY="${BODY}\n\n\nDisk usage:\n---------------------\n${DF}"
-	#echo -e "$BODY" | mail -r "peecloud@peecloud.lan (Trump, Grand King Emporer of PeeCloud and the Holy Lands)" -s "Receieved intergalactic bi-weekly status report from deepspace network..." $EMAIL_RECIPIENTS
+	#echo -e "$BODY" | mail -r "peecloud@peecloud.lan (Trump, Grand King Emporer of PeeCloud and the Holy Lands)" -s "Receieved intergalactic bi-weekly status report from deepspace network..." $EMAIL_RECIPIENT
+}
 
-	echo "Finished upload, starting sleep: $(date)"
-	sleep 5d
-	echo "Finished sleep: $(date)"
+restore_all () {
+	read -p "Restoration will erase everything in the data volumes!! \n \
+		Are you sure you wish to continue?"
+	if [ "$REPLY" != "yes" ]; then
+   		exit 1
+	fi
+
+	rm -rf ${DB_CONTAINER_VOLUME}/*
+#	rm -rf ${DB_CONTAINER_VOLUME}/*
+#	rm -rf ${DB_CONTAINER_VOLUME}/*
+
+	#do_restore $AWS_DB_BUCKET
+	do_sync ${AWS_DB_BUCKET} ${DB_CONTAINER_VOLUME} 
 }
 
 do_duplicity_upload () {
@@ -107,7 +164,7 @@ do_duplicity_upload () {
 	#do_sync /mnt/nextcloud_encrypted/ $AWS_DATA_BUCKET 
 }
 
-# Call the function that does everything
-#main
 
-do_duplicity_upload
+# Call the function that does everything
+main $1
+
