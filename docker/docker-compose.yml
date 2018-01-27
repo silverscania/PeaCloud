@@ -44,9 +44,9 @@ services:
       - duplicity_cache:/root/.cache/duplicity/
       - duplicity_cache_gpg:/root/.gnupg/
 
-      # Mount other volumes readonly
-      - db:/mnt/db_volume
-      - nextcloud:/mnt/app_volume
+      # Mount other volumes readonly unless restoring
+      - db:/mnt/db_volume:ro
+      - nextcloud:/mnt/app_volume:ro
       - /mnt/nextcloud_encrypted:/mnt/nextcloud_encrypted:ro
 
-    restart: unless-stopped
+    restart: "no"

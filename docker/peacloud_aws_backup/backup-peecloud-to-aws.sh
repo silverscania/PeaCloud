@@ -47,6 +47,7 @@ do_sync () {
 		--volsize=1000 \
 		--progress \
 		--progress-rate 60 \
+		--allow-source-mismatch \
 		$FOLDER \
 		$BUCKET \
 		2>&1
@@ -127,6 +128,7 @@ restore_all () {
 
 	do_sync ${AWS_DB_BUCKET} ${DB_CONTAINER_VOLUME} 
 	do_sync ${AWS_WWW_DATA_FOLDER_BUCKET} ${APP_CONTAINER_VOLUME} 
+	do_sync ${AWS_DATA_BUCKET} /mnt/nextcloud_encrypted/
 }
 
 do_duplicity_upload () {
@@ -137,7 +139,7 @@ do_duplicity_upload () {
 	
 	do_sync ${DB_CONTAINER_VOLUME} ${AWS_DB_BUCKET}
 	do_sync ${APP_CONTAINER_VOLUME} ${AWS_WWW_DATA_FOLDER_BUCKET}
-	#do_sync /mnt/nextcloud_encrypted/ $AWS_DATA_BUCKET 
+	do_sync /mnt/nextcloud_encrypted/ $AWS_DATA_BUCKET 
 }
 
 
