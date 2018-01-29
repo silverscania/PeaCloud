@@ -100,7 +100,7 @@ main () {
 			echo "Starting sleep: $(date)"
 			sleep 7d
 			echo "Finished sleep: $(date)"
-			do_duplicity_upload
+			# do_duplicity_upload
 		done
     		;;
 

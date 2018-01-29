@@ -30,7 +30,7 @@ services:
       - db
     volumes:
       - nextcloud:/var/www/html
-      - /mnt/nextcloud_encrypted:/storage
+      - /mnt/nextcloud_encrypted:/var/www/html/data
     restart: unless-stopped
   
   peacloud_aws_backup:
