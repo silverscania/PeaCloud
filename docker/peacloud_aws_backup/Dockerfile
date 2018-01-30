@@ -13,6 +13,7 @@ RUN set -x \
         py-setuptools \
         rsync \
         bash \
+	docker \
  && update-ca-certificates \
  && pip install \
       pydrive==1.3.1 \
@@ -21,13 +22,6 @@ RUN set -x \
  && apk del --purge py-pip
 
 VOLUME ["/root/.cache/duplicity", "/root/.gnupg"]
-
-#FROM ubuntu
-
-#RUN apt-get update
-#RUN apt-get install -y \
-#    duplicity \
-#    python-boto
 
 # See inside settings.sh for instructions on what to put in 
 # mysettings.sh

@@ -100,7 +100,7 @@ main () {
 			echo "Starting sleep: $(date)"
 			sleep 7d
 			echo "Finished sleep: $(date)"
-			# do_duplicity_upload
+			do_duplicity_upload
 		done
     		;;
 
@@ -115,31 +115,55 @@ main () {
 	#echo -e "$BODY" | mail -r "peecloud@peecloud.lan (Trump, Grand King Emporer of PeeCloud and the Holy Lands)" -s "Receieved intergalactic bi-weekly status report from deepspace network..." $EMAIL_RECIPIENT
 }
 
+##
+# Stop database and app containers so that there is no data changing
+# while backup is happening. Otherwise if you needed to restore it,
+# it might be corrupted.
+#
+stop_containers () {
+	# Stop containers (as gracefully as possible 10 mins timeout)
+	docker stop --time=600 docker_app_1
+	docker stop --time=600 docker_db_1
+}
+
+start_containers () {
+	docker start docker_db_1
+	docker start docker_app_1
+}
+
 restore_all () {
 	read -p "Restoration will erase everything in the data volumes!! \n \
-		Are you sure you wish to continue?"
+		Are you sure you wish to continue? (yes)"
 	if [ "$REPLY" != "yes" ]; then
    		exit 1
 	fi
 
+	stop_containers
+
+	#TODO: not sure whether deleting everything first is a good idea or not?
 	#rm -rf ${DB_CONTAINER_VOLUME}/*
 	#rm -rf ${APP_CONTAINER_VOLUME}/*
-#	rm -rf ${DB_CONTAINER_VOLUME}/*
+	#rm -rf ${DB_CONTAINER_VOLUME}/*
 
 	do_sync ${AWS_DB_BUCKET} ${DB_CONTAINER_VOLUME} 
 	do_sync ${AWS_WWW_DATA_FOLDER_BUCKET} ${APP_CONTAINER_VOLUME} 
 	do_sync ${AWS_DATA_BUCKET} /mnt/nextcloud_encrypted/
+
+	start_containers
 }
 
 do_duplicity_upload () {
+	stop_containers
+
 	#Remove single process lock file, duplicity still keeps a set of previous
 	#uploads and manifests in the same dir
-
 	#rm -f /root/.cache/duplicity/*/lockfile.lock
 	
 	do_sync ${DB_CONTAINER_VOLUME} ${AWS_DB_BUCKET}
 	do_sync ${APP_CONTAINER_VOLUME} ${AWS_WWW_DATA_FOLDER_BUCKET}
 	do_sync /mnt/nextcloud_encrypted/ $AWS_DATA_BUCKET 
+
+	start_containers
 }
 
 
