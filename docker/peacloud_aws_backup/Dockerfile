@@ -27,5 +27,4 @@ VOLUME ["/root/.cache/duplicity", "/root/.gnupg"]
 # mysettings.sh
 COPY ./settings.sh ./mysettings.sh ./backup-peecloud-to-aws.sh /
 
-ENTRYPOINT ["/backup-peecloud-to-aws.sh"]
-CMD ["--weekly-backup"]
+CMD ["/backup-peecloud-to-aws.sh", "--weekly-backup"]

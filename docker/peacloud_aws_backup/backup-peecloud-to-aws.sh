@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Make docker stop work without having to resort to SIGKILL
+trap 'exit 0' SIGTERM
+trap 'exit 0' SIGTRAP
+
 set -x
 
 # Cron needs path setting
@@ -34,9 +38,13 @@ do_sync () {
 	FOLDER=$1
 	BUCKET=$2
 
-        
+
 	ulimit -n 2048
-	
+
+	# TODO: to be able to interrupt this with "docker stop" it must be run in the 
+	# background with & and then "wait $PID". If this process (process 1) receives
+	# a signal, it must be forwarded to the duplicity process. Otherwise the normal
+	# stop command will time out and end up sending SIGKILL to duplicity.
 	duplicity --s3-use-new-style \
 		--verbosity i --s3-use-ia \
 		--s3-use-multiprocessing \
@@ -98,7 +106,20 @@ main () {
 		while [ 1 ]
 		do
 			echo "Starting sleep: $(date)"
-			sleep 7d
+
+			sleepDays=7
+			sleepSecondsInterval=5
+			sleepLoops=$(( ${sleepDays} * 24 * 60 * 60 / ${sleepSecondsInterval} ))
+			echo "Sleep seconds: " ${sleepSeconds}
+			echo "Sleep loops: " ${sleepLoops}
+			set +x # Don't log 1 million of these lines
+			# Sleep in small intervals so that "docker stop" works without killing.
+			# Killing is bad because a duplicity upload might be active.
+			for ((i=0; i<sleepLoops; i++))
+			do
+        			sleep ${sleepSecondsInterval}
+			done
+			set -x # Re-enable logging
 			echo "Finished sleep: $(date)"
 			do_duplicity_upload
 		done
