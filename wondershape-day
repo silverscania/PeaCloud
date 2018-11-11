@@ -1,4 +1,7 @@
 #!/bin/bash
 
+#Cron needs path setting
+export PATH=$PATH:/sbin/:/usr/bin/:/bin:/usr/local/bin/
+
 wondershaper enp2s0 2000 550
 

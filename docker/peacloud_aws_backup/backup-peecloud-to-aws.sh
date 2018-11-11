@@ -37,7 +37,7 @@ do_sync () {
 	# after 30 days. The files are prefixed so that an AWS lifecycle rule can be created
 	FOLDER=$1
 	BUCKET=$2
-
+        EXTRA_ARGS=$3
 
 	ulimit -n 2048
 
@@ -56,6 +56,7 @@ do_sync () {
 		--progress \
 		--progress-rate 60 \
 		--allow-source-mismatch \
+		$EXTRA_ARGS \
 		$FOLDER \
 		$BUCKET \
 		2>&1
@@ -166,9 +167,10 @@ restore_all () {
 	#rm -rf ${APP_CONTAINER_VOLUME}/*
 	#rm -rf ${DB_CONTAINER_VOLUME}/*
 
-	do_sync ${AWS_DB_BUCKET} ${DB_CONTAINER_VOLUME} 
-	do_sync ${AWS_WWW_DATA_FOLDER_BUCKET} ${APP_CONTAINER_VOLUME} 
-	do_sync ${AWS_DATA_BUCKET} /mnt/nextcloud_encrypted/
+        # Add force option because folders will be overwritten
+	do_sync ${AWS_DB_BUCKET} ${DB_CONTAINER_VOLUME} --force
+##	do_sync ${AWS_WWW_DATA_FOLDER_BUCKET} ${APP_CONTAINER_VOLUME} --force 
+#	do_sync ${AWS_DATA_BUCKET} /mnt/nextcloud_encrypted/ --force
 
 	start_containers
 }

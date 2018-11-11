@@ -1,6 +1,9 @@
 To Build
 ==================================
 $ cd docker
+$ cp peacloud_aws_backup/settings.sh peacloud_aws_backup/mysettings.sh
+* Fill out 'mysettings.sh'
+* Remove source (.) line from end of mysettings.sh
 $ docker-compose build
 
 
@@ -48,3 +51,14 @@ Resolution:
 	$ mkdir /var/httpd
 	$ service apache2 restart
 
+
+Install Crontab as root
+================================
+
+$ sudo su
+$ crontab -e 
+
+Add these lines:
+
+0 12 * * * {path-to-peacloud}/wondershape-night
+0 7  * * * {path-to-peacloud}/wondershape-day  
