@@ -48,5 +48,5 @@ services:
       - db:/mnt/db_volume:ro
       - nextcloud:/mnt/app_volume:ro
       - /mnt/nextcloud_encrypted:/mnt/nextcloud_encrypted:ro
-
+    # "restart: no" so that it's visible when there was a backup error 
     restart: "no"
