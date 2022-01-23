@@ -43,6 +43,9 @@ It will probably say it's in maintenance mode and require a manual upgrade:
 
 Repeat for next major version
 
+Disable maintenance mode:
+  $ docker-compose exec --user www-data app php occ maintenance:mode --off
+
 
 To Run a Backup Now
 =================================
