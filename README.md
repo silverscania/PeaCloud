@@ -27,8 +27,21 @@ To Update
 =================================
 See https://hub.docker.com/_/nextcloud/
 
-$ docker-compose pull app db
-$ docker-compose up -d
+Bump tag of app to next version eg 19 -> 20. Nextcloud only suports single version upgrades!
+    app:
+      image: nextcloud:20
+
+Pull new stuff:
+  $ docker-compose pull app db
+  
+Restart stuff:
+  $ docker-compose down -t 600
+  $ docker-compose up -d
+  
+It will probably say it's in maintenance mode and require a manual upgrade:
+  $ docker-compose exec --user www-data app php occ upgrade
+
+Repeat for next major version
 
 
 To Run a Backup Now

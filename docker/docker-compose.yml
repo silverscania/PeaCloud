@@ -14,6 +14,7 @@ services:
   db:
     image: mariadb
     restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW --innodb_read_only_compressed=OFF
     volumes:
       - db:/var/lib/mysql
     environment:
@@ -23,7 +24,7 @@ services:
       - MYSQL_USER=nextcloud
 
   app:  
-    image: nextcloud
+    image: nextcloud:20
     ports:
       - 80:80
     links:

@@ -3,5 +3,5 @@
 #Cron needs path setting
 export PATH=$PATH:/sbin/:/usr/bin/:/bin:/usr/local/bin/
 
-wondershaper enp2s0 1000 50
+wondershaper enp2s0f0 1000 50
 
